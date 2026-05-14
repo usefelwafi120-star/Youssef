@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Youssef Abdellatif</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --bg2: #111827;
+      --bg3: #1a2235;
+      --border: rgba(100,160,255,0.12);
+      --accent: #4f8eff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --text: #e8edf5;
+      --text2: #94a3b8;
+      --text3: #64748b;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, rgba(79,142,255,0.08) 0%, transparent 70%);
+    }
+    .login-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-card h1 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .login-card p { color: var(--text3); font-size: 0.85rem; margin-bottom: 2rem; font-family: 'DM Mono', monospace; }
+    .login-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1.2rem;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.9rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .login-btn:hover { background: #3a7ae8; }
+    .login-error { color: var(--accent3); font-size: 0.82rem; margin-top: 0.75rem; display: none; }
+
+    /* ── DASHBOARD ── */
+    #dashboard { display: none; }
+
+    .topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-title { font-size: 1rem; font-weight: 600; }
+    .topbar-title span { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 0.75rem; margin-left: 0.5rem; }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 0.4rem 1rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    .dash-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 57px);
+    }
+
+    .sidebar {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      color: var(--text2);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover { color: var(--text); background: rgba(79,142,255,0.05); }
+    .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,255,0.08); }
+    .sidebar-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    .main-content {
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    /* ── PANELS ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .panel-sub {
+      color: var(--text3);
+      font-size: 0.8rem;
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 2rem;
+    }
+
+    /* ── CARDS ── */
+    .edit-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .edit-card h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 1.2rem;
+    }
+
+    .field-group { margin-bottom: 1.2rem; }
+    .field-label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .field-textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .save-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.6rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .save-btn:hover { background: #3a7ae8; transform: translateY(-1px); }
+
+    .add-btn {
+      background: rgba(0,212,170,0.1);
+      color: var(--accent2);
+      border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 8px;
+      padding: 0.55rem 1.2rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+    .add-btn:hover { background: rgba(0,212,170,0.18); }
+
+    .del-btn {
+      background: rgba(255,107,107,0.1);
+      color: var(--accent3);
+      border: 1px solid rgba(255,107,107,0.2);
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.2s;
+    }
+    .del-btn:hover { background: rgba(255,107,107,0.2); }
+
+    .item-row {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .item-row-fields { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+    .item-row-fields input, .item-row-fields textarea {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .item-row-fields input:focus, .item-row-fields textarea:focus { border-color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--bg2);
+      border: 1px solid var(--accent2);
+      color: var(--accent2);
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* stats overview */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+    .stat-box .lbl { font-size: 0.72rem; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; margin-top: 0.2rem; }
+
+    .preview-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent2);
+      font-size: 0.82rem;
+      text-decoration: none;
+      font-family: 'DM Mono', monospace;
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 7px;
+      transition: all 0.2s;
+    }
+    .preview-link:hover { background: rgba(0,212,170,0.08); }
+
+    @media (max-width: 768px) {
+      .dash-layout { grid-template-columns: 1fr; }
+      .sidebar { display: flex; overflow-x: auto; padding: 0.5rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .sidebar-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+      .sidebar-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:2.5rem;margin-bottom:1rem;">🔐</div>
+    <h1>Admin Access</h1>
+    <p>Youssef Abdellatif · Portfolio Dashboard</p>
+    <input type="password" id="pwd-input" class="login-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')login()" />
+    <button class="login-btn" onclick="login()">Enter Dashboard</button>
+    <p class="login-error" id="login-err">❌ Wrong password. Try again.</p>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-title">
+      Portfolio Dashboard
+      <span>admin panel</span>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center;">
+      <a href="index.html" target="_blank" class="preview-link">👁 Preview Site →</a>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dash-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-item active" onclick="showPanel('overview')">
+        <span class="sidebar-icon">📊</span> Overview
+      </div>
+      <div class="sidebar-item" onclick="showPanel('hero')">
+        <span class="sidebar-icon">🏠</span> Hero Section
+      </div>
+      <div class="sidebar-item" onclick="showPanel('about')">
+        <span class="sidebar-icon">👤</span> About Me
+      </div>
+      <div class="sidebar-item" onclick="showPanel('skills')">
+        <span class="sidebar-icon">⚡</span> Skills
+      </div>
+      <div class="sidebar-item" onclick="showPanel('experience')">
+        <span class="sidebar-icon">💼</span> Experience
+      </div>
+      <div class="sidebar-item" onclick="showPanel('projects')">
+        <span class="sidebar-icon">🚀</span> Projects
+      </div>
+      <div class="sidebar-item" onclick="showPanel('certs')">
+        <span class="sidebar-icon">🎖</span> Certifications
+      </div>
+      <div class="sidebar-item" onclick="showPanel('contact')">
+        <span class="sidebar-icon">📬</span> Contact Info
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+      <!-- OVERVIEW -->
+      <div class="panel active" id="panel-overview">
+        <div class="panel-title">Welcome back, Youssef 👋</div>
+        <div class="panel-sub">portfolio · last updated today</div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="num" id="ov-skills">6</div><div class="lbl">Skill Categories</div></div>
+          <div class="stat-box"><div class="num" id="ov-projects">2</div><div class="lbl">Projects</div></div>
+          <div class="stat-box"><div class="num" id="ov-certs">6</div><div class="lbl">Certifications</div></div>
+          <div class="stat-box"><div class="num" id="ov-exp">2</div><div class="lbl">Experiences</div></div>
+        </div>
+        <div class="edit-card">
+          <h3>📋 Quick Guide</h3>
+          <p style="color:var(--text2);font-size:0.88rem;line-height:1.8;">
+            Use the sidebar to edit any section of your portfolio.<br>
+            After making changes, click <strong style="color:var(--accent)">Save & Apply</strong> in each section.<br>
+            Then <strong style="color:var(--accent2)">copy the generated code</strong> and replace your <code style="color:var(--accent);font-family:'DM Mono',monospace;">index.html</code> — or use the export button.<br><br>
+            <span style="color:var(--text3);">⚠️ Changes here generate code snippets you paste into index.html. Full auto-sync requires a backend server (Node.js/Firebase).</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- HERO -->
+      <div class="panel" id="panel-hero">
+        <div class="panel-title">Hero Section</div>
+        <div class="panel-sub">edit your name, title, and summary</div>
+        <div class="edit-card">
+          <h3>Personal Info</h3>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">First Name</label>
+              <input type="text" class="field-input" id="h-first" value="Youssef" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Last Name</label>
+              <input type="text" class="field-input" id="h-last" value="Abdellatif" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Job Title / Tagline</label>
+            <input type="text" class="field-input" id="h-title" value="IT Support / Network Engineer / Cloud" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Short Description</label>
+            <textarea class="field-input field-textarea" id="h-desc">Results-driven Business Information Systems student with hands-on experience in IT support, network administration, and cloud computing. Building intelligent systems where infrastructure meets innovation.</textarea>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Badge Text</label>
+              <input type="text" class="field-input" id="h-badge" value="Open to Opportunities" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Location</label>
+              <input type="text" class="field-input" id="h-location" value="Cairo, Egypt" />
+            </div>
+          </div>
+        </div>
+        <div class="edit-card">
+          <h3>Stats (Hero Card)</h3>
+          <div id="stats-list"></div>
+          <button class="add-btn" onclick="addStat()">+ Add Stat</button>
+        </div>
+        <button class="save-btn" onclick="saveHero()">Save & Generate Code</button>
+        <div id="hero-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- ABOUT -->
+      <div class="panel" id="panel-about">
+        <div class="panel-title">About Me</div>
+        <div class="panel-sub">edit your bio paragraphs</div>
+        <div class="edit-card">
+          <h3>Bio Paragraphs</h3>
+          <div id="bio-list"></div>
+          <button class="add-btn" onclick="addBio()">+ Add Paragraph</button>
+        </div>
+        <button class="save-btn" onclick="saveBio()">Save & Generate Code</button>
+        <div id="bio-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="panel" id="panel-skills">
+        <div class="panel-title">Skills</div>
+        <div class="panel-sub">add or edit skill categories and tags</div>
+        <div id="skills-list"></div>
+        <button class="add-btn" onclick="addSkillCard()">+ Add Skill Category</button>
+        <button class="save-btn" onclick="saveSkills()">Save & Generate Code</button>
+        <div id="skills-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- EXPERIENCE -->
+      <div class="panel" id="panel-experience">
+        <div class="panel-title">Experience</div>
+        <div class="panel-sub">edit your work and education timeline</div>
+        <div id="exp-list"></div>
+        <button class="add-btn" onclick="addExp()">+ Add Experience</button>
+        <button class="save-btn" onclick="saveExp()">Save & Generate Code</button>
+        <div id="exp-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="panel" id="panel-projects">
+        <div class="panel-title">Projects</div>
+        <div class="panel-sub">add, edit, or remove projects</div>
+        <div id="projects-list"></div>
+        <button class="add-btn" onclick="addProject()">+ Add Project</button>
+        <button class="save-btn" onclick="saveProjects()">Save & Generate Code</button>
+        <div id="projects-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- CERTS -->
+      <div class="panel" id="panel-certs">
+        <div class="panel-title">Certifications</div>
+        <div class="panel-sub">manage your credentials</div>
+        <div id="certs-list"></div>
+        <button class="add-btn" onclick="addCert()">+ Add Certification</button>
+        <button class="save-btn" onclick="saveCerts()">Save & Generate Code</button>
+        <div id="certs-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+      <!-- CONTACT -->
+      <div class="panel" id="panel-contact">
+        <div class="panel-title">Contact Info</div>
+        <div class="panel-sub">update your contact details</div>
+        <div class="edit-card">
+          <h3>Contact Details</h3>
+          <div class="field-group">
+            <label class="field-label">Email</label>
+            <input type="email" class="field-input" id="c-email" value="usefelwafi120@gmail.com" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">WhatsApp Number (with country code)</label>
+            <input type="text" class="field-input" id="c-phone" value="201064543891" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">LinkedIn URL</label>
+            <input type="text" class="field-input" id="c-linkedin" value="https://linkedin.com/in/youssef-abdellatif-1a9174335" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Contact Section Description</label>
+            <textarea class="field-input field-textarea" id="c-desc">I'm actively looking for IT, Network Engineering, or Cloud roles. Send me a message and I'll get back to you directly — by email or WhatsApp.</textarea>
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveContact()">Save & Generate Code</button>
+        <div id="contact-output" style="display:none;margin-top:1.5rem;"></div>
+      </div>
+
+    </div><!-- end main-content -->
+  </div><!-- end dash-layout -->
+</div><!-- end dashboard -->
+
+<div class="toast" id="toast">✅ Saved!</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+const ADMIN_PASSWORD = "youssef2025";  // ← غير الباسورد هنا
+
+function login() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    initDashboard();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+function logout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('pwd-input').value = '';
+}
+
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const DATA = {
+  stats: [
+    { num: "5+", label: "Certifications" },
+    { num: "2×", label: "Internships" },
+    { num: "500+", label: "Students Served" },
+    { num: "90%", label: "Time Saved" }
+  ],
+  bio: [
+    "I'm a <span class=\"highlight\">Business Information Systems</span> student at El-Shorouk Academy, Cairo, combining deep technical expertise with a passion for building systems that scale.",
+    "With hands-on certifications from <span class=\"highlight\">Cisco, Microsoft, and Amazon Web Services</span>, I bring practical knowledge across networking, cloud infrastructure, and Windows server environments.",
+    "My graduation project, an <span class=\"highlight\">AI-powered Smart Attendance System</span>, reduced manual attendance time by 90% across 500+ students.",
+    "I've also interned at the <span class=\"highlight\">Nile Ritz-Carlton Hotel</span>, gaining real-world exposure to enterprise-grade IT systems."
+  ],
+  skills: [
+    { icon: "🖧", title: "Networking", tags: "TCP/IP, DNS, DHCP, LAN/WAN, Switching, Routing" },
+    { icon: "☁️", title: "Cloud Platforms", tags: "Microsoft Azure, Amazon AWS, EC2, S3, VPC, IAM" },
+    { icon: "🖥️", title: "Windows Server", tags: "Windows Server, Active Directory, Group Policy, Microsoft 365" },
+    { icon: "🗄️", title: "Databases", tags: "SQL, Database Design, ERD, Query Writing, Data Modeling" },
+    { icon: "📐", title: "System Analysis", tags: "SRS Documentation, UML, Use Case Diagrams, Business Analysis" },
+    { icon: "🔧", title: "IT Support", tags: "Technical Troubleshooting, Hardware Support, ITSM, Help Desk" }
+  ],
+  experience: [
+    { date: "Summer 2024 & Summer 2025", title: "Technology & Operations Intern", company: "The Nile Ritz-Carlton Hotel — Cairo, Egypt", bullets: "Gained hands-on experience with enterprise IT systems\nSupported configuration and troubleshooting of network systems\nDeveloped professional skills in client-facing environments" },
+    { date: "2021 – Present", title: "Bachelor of Science — BIS", company: "El-Shorouk Academy — Cairo, Egypt", bullets: "Studying Business Information Systems with focus on networks and databases\nLed graduation project: AI-powered Smart Attendance System" }
+  ],
+  projects: [
+    { emoji: "🤖", name: "Smart Attendance & Counting System", year: "2025–2026", desc: "An AI-powered attendance management system leveraging Computer Vision and Face Recognition to fully automate student attendance tracking.", tags: "AI / Computer Vision, Face Recognition, SQL Database, Web Dashboard, UML / ERD" },
+    { emoji: "🖧", name: "Enterprise Network Infrastructure", year: "Field Training", desc: "Designed and implemented a complete network infrastructure using GNS3. Merged two separate networks into one secure unified environment.", tags: "GNS3, VLAN, Subnetting, Routing, Switching, Network Merging" }
+  ],
+  certs: [
+    { emoji: "🌐", name: "CCNA", issuer: "Cisco Certified Network Associate", year: "2023" },
+    { emoji: "🪟", name: "MCSA", issuer: "Microsoft Certified Solutions Associate", year: "2023" },
+    { emoji: "☁️", name: "AWS Administration", issuer: "Amazon Web Services", year: "2025" },
+    { emoji: "🔷", name: "AZ Administration", issuer: "Microsoft Azure Administrator", year: "2025" },
+    { emoji: "🔒", name: "Information Security", issuer: "Professional Training", year: "2024" },
+    { emoji: "🏗️", name: "IT Infrastructure Fundamentals", issuer: "Professional Training", year: "2023" }
+  ]
+};
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function initDashboard() {
+  renderStats();
+  renderBio();
+  renderSkills();
+  renderExp();
+  renderProjects();
+  renderCerts();
+}
+
+// ══════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════
+function renderStats() {
+  const list = document.getElementById('stats-list');
+  list.innerHTML = DATA.stats.map((s, i) => `
+    <div class="item-row">
+      <div class="item-row-fields">
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:0.5rem;">
+          <input value="${s.num}" placeholder="e.g. 5+" onchange="DATA.stats[${i}].num=this.value" />
+          <input value="${s.label}" placeholder="Label" onchange="DATA.stats[${i}].label=this.value" />
+        </div>
+      </div>
+      <button class="del-btn" onclick="DATA.stats.splice(${i},1);renderStats()">✕</button>
+    </div>`).join('');
+}
+
+function addStat() {
+  DATA.stats.push({ num: "0", label: "New Stat" });
+  renderStats();
+}
+
+// ══════════════════════════════════════════════
+//  BIO
+// ══════════════════════════════════════════════
+function renderBio() {
+  const list = document.getElementById('bio-list');
+  list.innerHTML = DATA.bio.map((b, i) => `
+    <div class="item-row">
+      <div class="item-row-fields">
+        <textarea rows="2" onchange="DATA.bio[${i}]=this.value">${b}</textarea>
+      </div>
+      <button class="del-btn" onclick="DATA.bio.splice(${i},1);renderBio()">✕</button>
+    </div>`).join('');
+}
+
+function addBio() {
+  DATA.bio.push("New paragraph here...");
+  renderBio();
+}
+
+// ══════════════════════════════════════════════
+//  SKILLS
+// ══════════════════════════════════════════════
+function renderSkills() {
+  const list = document.getElementById('skills-list');
+  list.innerHTML = DATA.skills.map((s, i) => `
+    <div class="edit-card" style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
+        <span style="color:var(--text3);font-size:0.75rem;font-family:'DM Mono',monospace;text-transform:uppercase;">Category ${i+1}</span>
+        <button class="del-btn" onclick="DATA.skills.splice(${i},1);renderSkills()">✕ Remove</button>
+      </div>
+      <div style="display:grid;grid-template-columns:60px 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+        <input value="${s.icon}" placeholder="Icon" onchange="DATA.skills[${i}].icon=this.value" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.6rem;color:var(--text);font-size:1.2rem;text-align:center;outline:none;" />
+        <input value="${s.title}" placeholder="Category Title" onchange="DATA.skills[${i}].title=this.value" class="field-input" />
+      </div>
+      <label class="field-label">Tags (comma-separated)</label>
+      <input value="${s.tags}" class="field-input" onchange="DATA.skills[${i}].tags=this.value" />
+    </div>`).join('');
+}
+
+function addSkillCard() {
+  DATA.skills.push({ icon: "⚙️", title: "New Category", tags: "Tag 1, Tag 2, Tag 3" });
+  renderSkills();
+}
+
+// ══════════════════════════════════════════════
+//  EXPERIENCE
+// ══════════════════════════════════════════════
+function renderExp() {
+  const list = document.getElementById('exp-list');
+  list.innerHTML = DATA.experience.map((e, i) => `
+    <div class="edit-card" style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:0.8rem;">
+        <span style="color:var(--text3);font-size:0.75rem;font-family:'DM Mono',monospace;text-transform:uppercase;">Entry ${i+1}</span>
+        <button class="del-btn" onclick="DATA.experience.splice(${i},1);renderExp()">✕ Remove</button>
+      </div>
+      <div class="field-row" style="margin-bottom:0.75rem;">
+        <div class="field-group"><label class="field-label">Date</label><input value="${e.date}" class="field-input" onchange="DATA.experience[${i}].date=this.value" /></div>
+        <div class="field-group"><label class="field-label">Title</label><input value="${e.title}" class="field-input" onchange="DATA.experience[${i}].title=this.value" /></div>
+      </div>
+      <div class="field-group"><label class="field-label">Company / Institution</label><input value="${e.company}" class="field-input" onchange="DATA.experience[${i}].company=this.value" /></div>
+      <div class="field-group"><label class="field-label">Bullet Points (one per line)</label><textarea rows="3" class="field-input field-textarea" onchange="DATA.experience[${i}].bullets=this.value">${e.bullets}</textarea></div>
+    </div>`).join('');
+}
+
+function addExp() {
+  DATA.experience.push({ date: "2025", title: "New Role", company: "Company Name", bullets: "Bullet point 1\nBullet point 2" });
+  renderExp();
+}
+
+// ══════════════════════════════════════════════
+//  PROJECTS
+// ══════════════════════════════════════════════
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = DATA.projects.map((p, i) => `
+    <div class="edit-card" style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:0.8rem;">
+        <span style="color:var(--text3);font-size:0.75rem;font-family:'DM Mono',monospace;text-transform:uppercase;">Project ${i+1}</span>
+        <button class="del-btn" onclick="DATA.projects.splice(${i},1);renderProjects()">✕ Remove</button>
+      </div>
+      <div class="field-row" style="margin-bottom:0.75rem;">
+        <div class="field-group"><label class="field-label">Emoji Icon</label><input value="${p.emoji}" class="field-input" onchange="DATA.projects[${i}].emoji=this.value" /></div>
+        <div class="field-group"><label class="field-label">Year / Period</label><input value="${p.year}" class="field-input" onchange="DATA.projects[${i}].year=this.value" /></div>
+      </div>
+      <div class="field-group"><label class="field-label">Project Name</label><input value="${p.name}" class="field-input" onchange="DATA.projects[${i}].name=this.value" /></div>
+      <div class="field-group"><label class="field-label">Description</label><textarea rows="3" class="field-input field-textarea" onchange="DATA.projects[${i}].desc=this.value">${p.desc}</textarea></div>
+      <div class="field-group"><label class="field-label">Tech Tags (comma-separated)</label><input value="${p.tags}" class="field-input" onchange="DATA.projects[${i}].tags=this.value" /></div>
+    </div>`).join('');
+}
+
+function addProject() {
+  DATA.projects.push({ emoji: "💡", name: "New Project", year: "2025", desc: "Project description here.", tags: "Tag 1, Tag 2" });
+  renderProjects();
+}
+
+// ══════════════════════════════════════════════
+//  CERTS
+// ══════════════════════════════════════════════
+function renderCerts() {
+  const list = document.getElementById('certs-list');
+  list.innerHTML = DATA.certs.map((c, i) => `
+    <div class="item-row">
+      <div class="item-row-fields">
+        <div style="display:grid;grid-template-columns:50px 1fr 1.5fr 80px;gap:0.5rem;">
+          <input value="${c.emoji}" placeholder="🎖" onchange="DATA.certs[${i}].emoji=this.value" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:0.4rem;color:var(--text);text-align:center;font-size:1.1rem;outline:none;" />
+          <input value="${c.name}" placeholder="Cert Name" onchange="DATA.certs[${i}].name=this.value" />
+          <input value="${c.issuer}" placeholder="Issuer" onchange="DATA.certs[${i}].issuer=this.value" />
+          <input value="${c.year}" placeholder="Year" onchange="DATA.certs[${i}].year=this.value" />
+        </div>
+      </div>
+      <button class="del-btn" onclick="DATA.certs.splice(${i},1);renderCerts()">✕</button>
+    </div>`).join('');
+}
+
+function addCert() {
+  DATA.certs.push({ emoji: "🏅", name: "New Cert", issuer: "Issuer Name", year: "2025" });
+  renderCerts();
+}
+
+// ══════════════════════════════════════════════
+//  SAVE / GENERATE CODE
+// ══════════════════════════════════════════════
+function showOutput(id, code) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <span style="color:var(--accent2);font-size:0.78rem;font-family:'DM Mono',monospace;">Generated HTML — copy & paste into index.html</span>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('${id}-code').innerText);showToast('Copied!')" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:0.35rem 0.9rem;font-size:0.78rem;cursor:pointer;">Copy</button>
+      </div>
+      <pre id="${id}-code" style="color:var(--text2);font-size:0.75rem;font-family:'DM Mono',monospace;overflow-x:auto;white-space:pre-wrap;line-height:1.6;">${escHtml(code)}</pre>
+    </div>`;
+  showToast('Code generated!');
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✅ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function saveHero() {
+  const first = document.getElementById('h-first').value;
+  const last  = document.getElementById('h-last').value;
+  const title = document.getElementById('h-title').value;
+  const desc  = document.getElementById('h-desc').value;
+  const badge = document.getElementById('h-badge').value;
+  const loc   = document.getElementById('h-location').value;
+  const statsHtml = DATA.stats.map(s => `
+          <div class="stat-item">
+            <div class="stat-num">${s.num}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>`).join('');
+  const code = `<!-- HERO NAME -->
+<h1 class="hero-name fade-in">${first}<br><span class="accent">${last}</span></h1>
+<p class="hero-title fade-in">$ ${title}</p>
+<p class="hero-desc fade-in">${desc}</p>
+<!-- BADGE -->
+<div class="hero-badge fade-in"><span></span> ${badge}</div>
+<!-- LOCATION -->
+<div class="card-location">📍 ${loc}</div>
+<!-- STATS -->
+<div class="stats-grid">${statsHtml}
+</div>`;
+  showOutput('hero-output', code);
+}
+
+function saveBio() {
+  const paragraphs = DATA.bio.map(b => `          <p>${b}</p>`).join('\n');
+  showOutput('bio-output', `<!-- ABOUT PARAGRAPHS -->\n${paragraphs}`);
+}
+
+function saveSkills() {
+  const cards = DATA.skills.map(s => {
+    const tags = s.tags.split(',').map(t => `            <span class="skill-tag">${t.trim()}</span>`).join('\n');
+    return `        <div class="skill-card">
+          <div class="skill-card-icon">${s.icon}</div>
+          <h3>${s.title}</h3>
+          <div class="skill-tags">
+${tags}
+          </div>
+        </div>`;
+  }).join('\n');
+  showOutput('skills-output', `<!-- SKILLS GRID -->\n<div class="skills-categories">\n${cards}\n</div>`);
+}
+
+function saveExp() {
+  const items = DATA.experience.map(e => {
+    const bullets = e.bullets.split('\n').filter(b=>b.trim()).map(b => `            <li>${b.trim()}</li>`).join('\n');
+    return `        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">${e.date}</div>
+          <h3 class="timeline-title">${e.title}</h3>
+          <div class="timeline-company">${e.company}</div>
+          <ul class="timeline-bullets">
+${bullets}
+          </ul>
+        </div>`;
+  }).join('\n');
+  showOutput('exp-output', `<!-- TIMELINE -->\n<div class="timeline">\n${items}\n</div>`);
+}
+
+function saveProjects() {
+  const cards = DATA.projects.map(p => {
+    const tags = p.tags.split(',').map(t => `            <span class="tech-tag">${t.trim()}</span>`).join('\n');
+    return `      <div class="project-card">
+        <div class="project-header">
+          <span class="project-year">${p.year}</span>
+          <div class="project-emoji">${p.emoji}</div>
+          <h3 class="project-name">${p.name}</h3>
+        </div>
+        <div class="project-body">
+          <p class="project-desc">${p.desc}</p>
+          <div class="project-tech">
+${tags}
+          </div>
+        </div>
+      </div>`;
+  }).join('\n');
+  showOutput('projects-output', `<!-- PROJECTS -->\n${cards}`);
+}
+
+function saveCerts() {
+  const cards = DATA.certs.map(c => `        <div class="cert-card">
+          <div class="cert-logo">${c.emoji}</div>
+          <div class="cert-info">
+            <h4>${c.name}</h4>
+            <div class="issuer">${c.issuer}</div>
+            <span class="year">${c.year}</span>
+          </div>
+        </div>`).join('\n');
+  showOutput('certs-output', `<!-- CERTIFICATIONS -->\n<div class="certs-grid">\n${cards}\n</div>`);
+}
+
+function saveContact() {
+  const email   = document.getElementById('c-email').value;
+  const phone   = document.getElementById('c-phone').value;
+  const linkedin= document.getElementById('c-linkedin').value;
+  const desc    = document.getElementById('c-desc').value;
+  const code = `<!-- CONTACT LINKS -->
+<a href="mailto:${email}" class="contact-link">✉️ Email Me</a>
+<a href="https://wa.me/${phone}" target="_blank" class="contact-link">WhatsApp</a>
+<a href="${linkedin}" target="_blank" class="contact-link">🔗 LinkedIn</a>
+<!-- DESCRIPTION -->
+<p>${desc}</p>
+<!-- EMAILJS to_email -->
+to_email: '${email}'`;
+  showOutput('contact-output', code);
+}
+</script>
+</body>
+</html>
